@@ -1,6 +1,7 @@
 # Maxx Health — Commission Statement Generator
 
 Internal tool for generating distributor commission statements from invoice worksheets.
+automatically pushed to commissions.phillyshah.com
 
 ## What It Does
 
