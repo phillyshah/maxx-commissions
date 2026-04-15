@@ -26,7 +26,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "1.0"
+APP_VERSION = "1.1"
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), 'static', 'maxx_logo.png')
 

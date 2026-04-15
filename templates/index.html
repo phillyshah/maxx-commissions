@@ -8,19 +8,19 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0b0e14;
-            --surface: #151925;
-            --surface-2: #10141d;
-            --surface-hover: #1b2130;
-            --border: #2a3244;
-            --text: #e9ecf3;
-            --text-muted: #9099ab;
-            --accent: #4f8ff7;
-            --accent-soft: rgba(79, 143, 247, 0.14);
-            --success: #34d399;
-            --success-soft: rgba(52, 211, 153, 0.14);
-            --error: #f87171;
-            --error-soft: rgba(248, 113, 113, 0.1);
+            --bg: #f0f4f8;
+            --surface: #ffffff;
+            --surface-2: #f7f9fc;
+            --surface-hover: #eef2f7;
+            --border: #d1d9e6;
+            --text: #1a202c;
+            --text-muted: #4a5568;
+            --accent: #2563eb;
+            --accent-soft: rgba(37, 99, 235, 0.10);
+            --success: #059669;
+            --success-soft: rgba(5, 150, 105, 0.12);
+            --error: #dc2626;
+            --error-soft: rgba(220, 38, 38, 0.08);
             --radius: 16px;
         }
 
@@ -29,8 +29,8 @@
         body {
             font-family: 'DM Sans', sans-serif;
             background:
-                radial-gradient(circle at top, rgba(79, 143, 247, 0.18), transparent 32%),
-                linear-gradient(180deg, #0b0e14 0%, #111624 100%);
+                radial-gradient(circle at top, rgba(37, 99, 235, 0.07), transparent 40%),
+                linear-gradient(180deg, #edf2fb 0%, #f0f4f8 100%);
             color: var(--text);
             min-height: 100vh;
             padding: 2.5rem 1.25rem;
@@ -75,11 +75,11 @@
         }
 
         .card {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)), var(--surface);
+            background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 1.5rem;
-            box-shadow: 0 14px 48px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
         }
 
         .step-chip {
@@ -135,7 +135,7 @@
             position: relative;
             border: 2px dashed var(--border);
             border-radius: 14px;
-            background: rgba(255, 255, 255, 0.01);
+            background: var(--surface-2);
             padding: 2.2rem 1.3rem;
             text-align: center;
             cursor: pointer;
