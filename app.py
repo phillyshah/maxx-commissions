@@ -380,6 +380,21 @@ def process_excel(input_path, job_dir):
     }
 
 
+def validate_pdf_source_workbook(input_path):
+    """Validate that the uploaded workbook is a reviewed statements workbook."""
+    wb = openpyxl.load_workbook(input_path, read_only=True, data_only=True)
+    sheetnames = set(wb.sheetnames)
+    wb.close()
+
+    if 'Summary' not in sheetnames:
+        raise ValueError("The verified workbook must include a Summary sheet.")
+
+    non_statement_sheets = {'Invoice List', 'Dist Lookup', 'Trauma', 'Summary'}
+    distributor_tabs = [name for name in sheetnames if name not in non_statement_sheets]
+    if not distributor_tabs:
+        raise ValueError("The verified workbook must include at least one distributor tab.")
+
+
 def generate_pdfs(job_dir):
     """Step 2: Convert the Excel workbook in job_dir to PDFs and zip them."""
     # Find the xlsx
@@ -398,7 +413,7 @@ def generate_pdfs(job_dir):
     zip_name = f'{zip_base}.zip'
     zip_path = os.path.join(job_dir, zip_name)
 
-    skip_sheets = {'Invoice List', 'Trauma', 'Dist Lookup'}
+    skip_sheets = {'Invoice List', 'Trauma', 'Dist Lookup', 'Summary'}
     temp_dir = os.path.join(job_dir, 'temp_sheets')
     pdf_dir = os.path.join(job_dir, 'pdfs')
     os.makedirs(temp_dir, exist_ok=True)
@@ -484,7 +499,8 @@ def index():
 
 
 @app.route('/upload', methods=['POST'])
-def upload():
+@app.route('/upload-template', methods=['POST'])
+def upload_template():
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
 
@@ -513,6 +529,41 @@ def upload():
             'year': result['year'],
             'num_distributors': result['num_distributors'],
             'xlsx_name': result['xlsx_name'],
+        })
+    except Exception as e:
+        shutil.rmtree(job_dir, ignore_errors=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/generate-pdfs-upload', methods=['POST'])
+def generate_pdfs_upload():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+
+    if not file.filename.endswith('.xlsx'):
+        return jsonify({'error': 'Please upload an .xlsx file'}), 400
+
+    job_id = str(uuid.uuid4())[:8]
+    job_dir = os.path.join(app.config['OUTPUT_FOLDER'], job_id)
+    os.makedirs(job_dir, exist_ok=True)
+
+    input_name = secure_filename(file.filename)
+    input_path = os.path.join(job_dir, input_name)
+    file.save(input_path)
+
+    try:
+        validate_pdf_source_workbook(input_path)
+        result = generate_pdfs(job_dir)
+        return jsonify({
+            'success': True,
+            'job_id': job_id,
+            'source_name': input_name,
+            'zip_name': result['zip_name'],
+            'num_pdfs': result['num_pdfs'],
         })
     except Exception as e:
         shutil.rmtree(job_dir, ignore_errors=True)

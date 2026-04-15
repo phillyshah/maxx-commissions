@@ -3,91 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maxx Health — Commission Statements</title>
+    <title>Maxx Health - Commission Statements</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0c0f14;
-            --surface: #161a22;
-            --surface-hover: #1c2130;
-            --border: #2a2f3d;
-            --text: #e8eaf0;
-            --text-muted: #7b829a;
+            --bg: #0b0e14;
+            --surface: #151925;
+            --surface-2: #10141d;
+            --surface-hover: #1b2130;
+            --border: #2a3244;
+            --text: #e9ecf3;
+            --text-muted: #9099ab;
             --accent: #4f8ff7;
-            --accent-glow: rgba(79, 143, 247, 0.15);
+            --accent-soft: rgba(79, 143, 247, 0.14);
             --success: #34d399;
-            --success-glow: rgba(52, 211, 153, 0.15);
+            --success-soft: rgba(52, 211, 153, 0.14);
             --error: #f87171;
-            --radius: 12px;
+            --error-soft: rgba(248, 113, 113, 0.1);
+            --radius: 16px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
+            background:
+                radial-gradient(circle at top, rgba(79, 143, 247, 0.18), transparent 32%),
+                linear-gradient(180deg, #0b0e14 0%, #111624 100%);
             color: var(--text);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            padding: 2.5rem 1.25rem;
+        }
+
+        .shell {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero img {
+            height: 64px;
+            background: #fff;
+            padding: 10px 18px;
+            border-radius: 12px;
+            margin-bottom: 1.25rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(1.9rem, 3vw, 2.6rem);
+            letter-spacing: -0.03em;
+            margin-bottom: 0.65rem;
+        }
+
+        .hero p {
+            max-width: 720px;
+            margin: 0 auto;
+            color: var(--text-muted);
+            line-height: 1.65;
+        }
+
+        .workflow {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.25rem;
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)), var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 14px 48px rgba(0, 0, 0, 0.2);
+        }
+
+        .step-chip {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 560px;
-        }
-
-        .logo-area {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .logo-area img {
-            height: 64px;
-            margin-bottom: 1rem;
-            background: #fff;
-            padding: 10px 20px;
-            border-radius: 10px;
-        }
-
-        .logo-area h1 {
-            font-size: 1.5rem;
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
             font-weight: 700;
-            letter-spacing: -0.02em;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h2 {
+            font-size: 1.15rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .card .intro {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.6;
+            margin-bottom: 1.1rem;
+        }
+
+        .hint {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface-2);
+            padding: 0.95rem 1rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .hint strong {
+            display: block;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent);
             margin-bottom: 0.35rem;
         }
 
-        .logo-area p {
+        .hint p {
             color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 300;
-        }
-
-        /* Upload Card */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 2rem;
+            font-size: 0.86rem;
+            line-height: 1.55;
         }
 
         .dropzone {
+            position: relative;
             border: 2px dashed var(--border);
-            border-radius: var(--radius);
-            padding: 3rem 2rem;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.01);
+            padding: 2.2rem 1.3rem;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
+            transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
         }
 
-        .dropzone:hover, .dropzone.dragover {
+        .dropzone:hover,
+        .dropzone.dragover {
             border-color: var(--accent);
-            background: var(--accent-glow);
+            background: var(--accent-soft);
+            transform: translateY(-1px);
         }
 
         .dropzone input {
@@ -97,76 +156,98 @@
             cursor: pointer;
         }
 
-        .dropzone-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
-            opacity: 0.6;
-        }
-
-        .dropzone-text {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
-        .dropzone-text strong {
-            color: var(--accent);
-            font-weight: 500;
-        }
-
-        .file-selected {
-            display: none;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.85rem 1rem;
-            background: var(--surface-hover);
-            border-radius: 8px;
-            margin-top: 1.25rem;
-            font-size: 0.85rem;
-        }
-
-        .file-selected.show { display: flex; }
-
-        .file-selected .fname {
-            flex: 1;
+        .dropzone .mono {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
-            color: var(--text);
-            white-space: nowrap;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .dropzone p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .file-selected,
+        .download-row,
+        .result-box {
+            display: none;
+            margin-top: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .file-selected.show,
+        .download-row.show,
+        .result-box.show {
+            display: flex;
+        }
+
+        .file-selected,
+        .download-row {
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.9rem 1rem;
+        }
+
+        .result-box.show {
+            display: block;
+            padding: 1rem;
+        }
+
+        .file-meta,
+        .download-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name,
+        .download-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .file-selected .fsize {
+        .file-size,
+        .download-desc,
+        .result-box p {
             color: var(--text-muted);
-            font-size: 0.75rem;
-            flex-shrink: 0;
+            font-size: 0.8rem;
+            line-height: 1.5;
         }
 
-        .file-selected .remove-btn {
-            background: none;
+        .remove-btn {
+            background: transparent;
             border: none;
             color: var(--text-muted);
+            font-size: 1rem;
             cursor: pointer;
-            font-size: 1.1rem;
-            padding: 0 0.25rem;
-            transition: color 0.15s;
         }
-
-        .file-selected .remove-btn:hover { color: var(--error); }
 
         .btn {
-            display: block;
             width: 100%;
-            padding: 0.85rem;
-            margin-top: 1.25rem;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
+            padding: 0.92rem 1rem;
+            margin-top: 1rem;
             font-family: 'DM Sans', sans-serif;
             font-size: 0.95rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
         }
 
         .btn-primary {
@@ -176,420 +257,416 @@
 
         .btn-primary:hover:not(:disabled) {
             background: #3d7de0;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px var(--accent-glow);
         }
 
-        .btn-primary:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Processing State */
-        .processing {
-            display: none;
-            text-align: center;
-            padding: 2rem 1rem;
-        }
-
-        .processing.show { display: block; }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 1.25rem;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .processing p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .processing .step {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-            opacity: 0.7;
-        }
-
-        /* Results */
-        .results {
-            display: none;
-            padding: 0.5rem 0 0;
-        }
-
-        .results.show { display: block; }
-
-        .results-header {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .results-header .check {
-            width: 28px;
-            height: 28px;
-            background: var(--success-glow);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--success);
-            font-size: 1rem;
-        }
-
-        .results-header .info h3 {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .results-header .info p {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .download-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.85rem 1rem;
-            background: var(--surface-hover);
-            border-radius: 8px;
-            margin-bottom: 0.6rem;
-        }
-
-        .download-row .dl-info {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .download-row .dl-icon {
-            font-size: 1.3rem;
-            opacity: 0.7;
-        }
-
-        .download-row .dl-label {
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .download-row .dl-desc {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-        }
-
-        .download-row a {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            padding: 0.45rem 0.85rem;
-            background: var(--accent);
-            color: #fff;
-            text-decoration: none;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            transition: all 0.15s;
-        }
-
-        .download-row a:hover {
-            background: #3d7de0;
-        }
-
-        .btn-reset {
+        .btn-secondary {
             background: transparent;
             border: 1px solid var(--border);
             color: var(--text-muted);
-            margin-top: 1rem;
         }
 
-        .btn-reset:hover {
+        .btn-secondary:hover:not(:disabled) {
             border-color: var(--text-muted);
             color: var(--text);
         }
 
-        /* Error */
-        .error-msg {
-            display: none;
-            background: rgba(248, 113, 113, 0.08);
-            border: 1px solid rgba(248, 113, 113, 0.2);
+        .download-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 132px;
+            padding: 0.55rem 0.85rem;
             border-radius: 8px;
-            padding: 0.85rem 1rem;
-            margin-top: 1rem;
-            font-size: 0.85rem;
-            color: var(--error);
+            text-decoration: none;
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 700;
         }
 
-        .error-msg.show { display: block; }
+        .processing {
+            display: none;
+            margin-top: 1rem;
+            padding: 1.2rem 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            text-align: center;
+        }
+
+        .processing.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            margin: 0 auto 0.9rem;
+            border-radius: 50%;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            animation: spin 0.8s linear infinite;
+        }
+
+        .processing p {
+            font-size: 0.9rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .processing .step {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .success-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: var(--success);
+            margin-bottom: 0.45rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .success-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--success);
+            box-shadow: 0 0 0 6px var(--success-soft);
+        }
+
+        .error-msg {
+            display: none;
+            margin-top: 1rem;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            background: var(--error-soft);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            color: var(--error);
+            font-size: 0.84rem;
+            line-height: 1.5;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
 
         footer {
-            margin-top: 2.5rem;
+            margin-top: 2rem;
+            text-align: center;
             color: var(--text-muted);
             font-size: 0.75rem;
-            text-align: center;
-            opacity: 0.5;
+            opacity: 0.7;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 860px) {
+            .workflow {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo-area">
+    <div class="shell">
+        <div class="hero">
             <img src="/static/maxx_logo.png" alt="Maxx Health" onerror="this.style.display='none'">
             <h1>Commission Statement Generator</h1>
-            <p>Upload a worksheet, get formatted statements + PDFs</p>
+            <p>Build the review workbook first, confirm the Summary and distributor tabs, then upload the verified workbook to create the final PDF zip.</p>
         </div>
 
-        <div class="card">
-            <!-- Upload State -->
-            <div id="upload-area">
-                <div class="dropzone" id="dropzone">
-                    <input type="file" id="file-input" accept=".xlsx">
-                    <div class="dropzone-icon">📄</div>
-                    <div class="dropzone-text">
-                        Drop your <strong>.xlsx</strong> file here<br>
-                        or click to browse
+        <div class="workflow">
+            <section class="card">
+                <div class="step-chip">1</div>
+                <h2>Create Review Workbook</h2>
+                <p class="intro">Upload the monthly spreadsheet template. The app will build a new Excel workbook with the Summary sheet plus individual distributor tabs for review.</p>
+
+                <div class="hint">
+                    <strong>Input for Step 1</strong>
+                    <p>Use the source commission worksheet that includes at least <code>Invoice List</code> and <code>Dist Lookup</code>.</p>
+                </div>
+
+                <div class="dropzone" id="step1-dropzone">
+                    <input type="file" id="step1-file-input" accept=".xlsx">
+                    <div class="mono">SOURCE WORKBOOK</div>
+                    <p>Drop the template file here or click to browse for a <strong>.xlsx</strong> worksheet.</p>
+                </div>
+
+                <div class="file-selected" id="step1-file-info">
+                    <div class="file-meta">
+                        <div class="file-name" id="step1-file-name"></div>
+                        <div class="file-size" id="step1-file-size"></div>
                     </div>
+                    <button class="remove-btn" id="step1-remove-btn" title="Remove file">Clear</button>
                 </div>
 
-                <div class="file-selected" id="file-info">
-                    <span class="fname" id="file-name"></span>
-                    <span class="fsize" id="file-size"></span>
-                    <button class="remove-btn" id="remove-btn" title="Remove">✕</button>
-                </div>
+                <button class="btn btn-primary" id="step1-process-btn" disabled>Create Excel Review File</button>
 
-                <button class="btn btn-primary" id="process-btn" disabled>Generate Statements</button>
-
-                <div class="error-msg" id="error-msg"></div>
-            </div>
-
-            <!-- Processing State -->
-            <div class="processing" id="processing">
-                <div class="spinner"></div>
-                <p>Generating commission statements...</p>
-                <div class="step">Parsing invoices → Building sheets → Creating PDFs</div>
-            </div>
-
-            <!-- Results State -->
-            <div class="results" id="results">
-                <div class="results-header">
-                    <div class="check">✓</div>
-                    <div class="info">
-                        <h3 id="result-title">Done!</h3>
-                        <p id="result-desc"></p>
-                    </div>
-                </div>
-
-                <div class="download-row">
-                    <div class="dl-info">
-                        <span class="dl-icon">📊</span>
-                        <div>
-                            <div class="dl-label">Excel Workbook</div>
-                            <div class="dl-desc">Summary + individual distributor tabs</div>
-                        </div>
-                    </div>
-                    <a href="#" id="dl-xlsx">↓ Download</a>
-                </div>
-
-                <!-- PDF generation section -->
-                <div id="pdf-section">
-                    <button class="btn btn-primary" id="generate-pdf-btn" style="margin-top:1rem;">Generate PDFs</button>
-                </div>
-
-                <div class="processing" id="pdf-processing" style="padding:1.25rem 0;">
+                <div class="processing" id="step1-processing">
                     <div class="spinner"></div>
-                    <p>Generating PDFs...</p>
-                    <div class="step">Converting sheets → Creating zip</div>
+                    <p>Building the review workbook...</p>
+                    <div class="step">Parsing invoices -> creating Summary -> building distributor tabs</div>
                 </div>
 
-                <div class="download-row" id="zip-row" style="display:none; margin-top:0.6rem;">
-                    <div class="dl-info">
-                        <span class="dl-icon">📁</span>
-                        <div>
-                            <div class="dl-label">PDF Bundle</div>
-                            <div class="dl-desc" id="pdf-count">Individual PDFs, zipped</div>
-                        </div>
+                <div class="result-box" id="step1-result">
+                    <div class="success-badge">
+                        <span class="success-dot"></span>
+                        Excel review file ready
                     </div>
-                    <a href="#" id="dl-zip">↓ Download</a>
+                    <p id="step1-result-text"></p>
                 </div>
 
-                <div class="error-msg" id="pdf-error-msg"></div>
+                <div class="download-row" id="step1-download-row">
+                    <div class="download-meta">
+                        <div class="download-title">Review Workbook</div>
+                        <div class="download-desc">Download, review, and make any needed edits before step 2.</div>
+                    </div>
+                    <a class="download-link" href="#" id="step1-download-link">Download Excel</a>
+                </div>
 
-                <button class="btn btn-reset" id="reset-btn">Process Another File</button>
-            </div>
+                <button class="btn btn-secondary" id="step1-reset-btn">Start Over</button>
+                <div class="error-msg" id="step1-error-msg"></div>
+            </section>
+
+            <section class="card">
+                <div class="step-chip">2</div>
+                <h2>Create PDF Zip</h2>
+                <p class="intro">Upload the reviewed Excel workbook from step 1. This can be the original generated file or your edited version after accounting verifies it.</p>
+
+                <div class="hint">
+                    <strong>Input for Step 2</strong>
+                    <p>Upload the verified statements workbook with the <code>Summary</code> sheet and the distributor tabs you want turned into PDFs.</p>
+                </div>
+
+                <div class="dropzone" id="step2-dropzone">
+                    <input type="file" id="step2-file-input" accept=".xlsx">
+                    <div class="mono">VERIFIED WORKBOOK</div>
+                    <p>Drop the approved workbook here or click to browse for the reviewed <strong>.xlsx</strong> file.</p>
+                </div>
+
+                <div class="file-selected" id="step2-file-info">
+                    <div class="file-meta">
+                        <div class="file-name" id="step2-file-name"></div>
+                        <div class="file-size" id="step2-file-size"></div>
+                    </div>
+                    <button class="remove-btn" id="step2-remove-btn" title="Remove file">Clear</button>
+                </div>
+
+                <button class="btn btn-primary" id="step2-process-btn" disabled>Create PDF Zip</button>
+
+                <div class="processing" id="step2-processing">
+                    <div class="spinner"></div>
+                    <p>Generating PDFs from the verified workbook...</p>
+                    <div class="step">Reading distributor tabs -> converting sheets -> creating zip</div>
+                </div>
+
+                <div class="result-box" id="step2-result">
+                    <div class="success-badge">
+                        <span class="success-dot"></span>
+                        PDF bundle ready
+                    </div>
+                    <p id="step2-result-text"></p>
+                </div>
+
+                <div class="download-row" id="step2-download-row">
+                    <div class="download-meta">
+                        <div class="download-title">PDF Zip File</div>
+                        <div class="download-desc" id="step2-download-desc">Distributor PDFs packaged into a single zip file.</div>
+                    </div>
+                    <a class="download-link" href="#" id="step2-download-link">Download Zip</a>
+                </div>
+
+                <button class="btn btn-secondary" id="step2-reset-btn">Clear Step 2</button>
+                <div class="error-msg" id="step2-error-msg"></div>
+            </section>
         </div>
 
-        <footer>Maxx Health Inc. — Internal Tool</footer>
+        <footer>Maxx Health Inc. - Internal Tool</footer>
     </div>
 
     <script>
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('file-input');
-        const fileInfo = document.getElementById('file-info');
-        const fileName = document.getElementById('file-name');
-        const fileSize = document.getElementById('file-size');
-        const removeBtn = document.getElementById('remove-btn');
-        const processBtn = document.getElementById('process-btn');
-        const uploadArea = document.getElementById('upload-area');
-        const processing = document.getElementById('processing');
-        const results = document.getElementById('results');
-        const errorMsg = document.getElementById('error-msg');
-
-        let selectedFile = null;
-
         function formatBytes(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-            return (bytes / 1048576).toFixed(1) + ' MB';
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / 1048576).toFixed(1)} MB`;
         }
 
-        function setFile(file) {
-            if (!file || !file.name.endsWith('.xlsx')) {
-                showError('Please select an .xlsx file');
-                return;
+        function createUploadStep(config) {
+            const dropzone = document.getElementById(config.dropzoneId);
+            const input = document.getElementById(config.inputId);
+            const fileInfo = document.getElementById(config.fileInfoId);
+            const fileName = document.getElementById(config.fileNameId);
+            const fileSize = document.getElementById(config.fileSizeId);
+            const removeBtn = document.getElementById(config.removeBtnId);
+            const processBtn = document.getElementById(config.processBtnId);
+            const processing = document.getElementById(config.processingId);
+            const errorBox = document.getElementById(config.errorId);
+            const resultBox = document.getElementById(config.resultId);
+            const resultText = document.getElementById(config.resultTextId);
+            const downloadRow = document.getElementById(config.downloadRowId);
+            const downloadLink = document.getElementById(config.downloadLinkId);
+            const resetBtn = document.getElementById(config.resetBtnId);
+            const downloadDesc = config.downloadDescId ? document.getElementById(config.downloadDescId) : null;
+
+            let selectedFile = null;
+
+            function showError(message) {
+                errorBox.textContent = message;
+                errorBox.classList.add('show');
             }
-            selectedFile = file;
-            fileName.textContent = file.name;
-            fileSize.textContent = formatBytes(file.size);
-            fileInfo.classList.add('show');
-            processBtn.disabled = false;
-            errorMsg.classList.remove('show');
-        }
 
-        function clearFile() {
-            selectedFile = null;
-            fileInput.value = '';
-            fileInfo.classList.remove('show');
-            processBtn.disabled = true;
-        }
+            function clearError() {
+                errorBox.classList.remove('show');
+                errorBox.textContent = '';
+            }
 
-        function showError(msg) {
-            errorMsg.textContent = msg;
-            errorMsg.classList.add('show');
-        }
+            function resetState() {
+                selectedFile = null;
+                input.value = '';
+                fileInfo.classList.remove('show');
+                processBtn.disabled = true;
+                processing.classList.remove('show');
+                resultBox.classList.remove('show');
+                downloadRow.classList.remove('show');
+                clearError();
+            }
 
-        // Drag & drop
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropzone.classList.add('dragover');
-        });
-        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-        dropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-            if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
-        });
+            function setFile(file) {
+                if (!file || !file.name.toLowerCase().endsWith('.xlsx')) {
+                    showError('Please select an .xlsx file.');
+                    return;
+                }
+                selectedFile = file;
+                fileName.textContent = file.name;
+                fileSize.textContent = formatBytes(file.size);
+                fileInfo.classList.add('show');
+                processBtn.disabled = false;
+                clearError();
+            }
 
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length) setFile(fileInput.files[0]);
-        });
+            dropzone.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                dropzone.classList.add('dragover');
+            });
 
-        removeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            clearFile();
-        });
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('dragover');
+            });
 
-        let currentJobId = null;
+            dropzone.addEventListener('drop', (event) => {
+                event.preventDefault();
+                dropzone.classList.remove('dragover');
+                if (event.dataTransfer.files.length) {
+                    setFile(event.dataTransfer.files[0]);
+                }
+            });
 
-        // Process — Step 1: Excel only
-        processBtn.addEventListener('click', async () => {
-            if (!selectedFile) return;
+            input.addEventListener('change', () => {
+                if (input.files.length) {
+                    setFile(input.files[0]);
+                }
+            });
 
-            uploadArea.style.display = 'none';
-            processing.classList.add('show');
-            errorMsg.classList.remove('show');
+            removeBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                resetState();
+            });
 
-            const formData = new FormData();
-            formData.append('file', selectedFile);
+            resetBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                resetState();
+            });
 
-            try {
-                const resp = await fetch('/upload', { method: 'POST', body: formData });
-                const data = await resp.json();
+            processBtn.addEventListener('click', async () => {
+                if (!selectedFile) return;
 
-                if (data.error) {
+                processBtn.disabled = true;
+                clearError();
+                resultBox.classList.remove('show');
+                downloadRow.classList.remove('show');
+                processing.classList.add('show');
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                try {
+                    const response = await fetch(config.endpoint, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+
                     processing.classList.remove('show');
-                    uploadArea.style.display = 'block';
-                    showError(data.error);
-                    return;
+
+                    if (!response.ok || data.error) {
+                        processBtn.disabled = false;
+                        showError(data.error || 'Something went wrong. Please try again.');
+                        return;
+                    }
+
+                    resultText.textContent = config.resultMessage(data);
+                    resultBox.classList.add('show');
+                    downloadLink.href = config.downloadUrl(data);
+                    if (downloadDesc) {
+                        downloadDesc.textContent = config.downloadDescription(data);
+                    }
+                    downloadRow.classList.add('show');
+                    processBtn.disabled = false;
+                } catch (error) {
+                    processing.classList.remove('show');
+                    processBtn.disabled = false;
+                    showError('Something went wrong. Please try again.');
                 }
+            });
 
-                currentJobId = data.job_id;
+            return { resetState, setFile };
+        }
 
-                // Show results — Excel only
-                processing.classList.remove('show');
-                results.classList.add('show');
-
-                document.getElementById('result-title').textContent =
-                    `${data.month} ${data.year} — Excel Ready`;
-                document.getElementById('result-desc').textContent =
-                    `${data.num_distributors} distributors · review then generate PDFs`;
-                document.getElementById('dl-xlsx').href = `/download/${data.job_id}/xlsx`;
-
-                // Reset PDF section state
-                document.getElementById('pdf-section').style.display = 'block';
-                document.getElementById('pdf-processing').classList.remove('show');
-                document.getElementById('zip-row').style.display = 'none';
-                document.getElementById('pdf-error-msg').classList.remove('show');
-
-            } catch (err) {
-                processing.classList.remove('show');
-                uploadArea.style.display = 'block';
-                showError('Something went wrong. Please try again.');
-            }
+        const step1 = createUploadStep({
+            dropzoneId: 'step1-dropzone',
+            inputId: 'step1-file-input',
+            fileInfoId: 'step1-file-info',
+            fileNameId: 'step1-file-name',
+            fileSizeId: 'step1-file-size',
+            removeBtnId: 'step1-remove-btn',
+            processBtnId: 'step1-process-btn',
+            processingId: 'step1-processing',
+            errorId: 'step1-error-msg',
+            resultId: 'step1-result',
+            resultTextId: 'step1-result-text',
+            downloadRowId: 'step1-download-row',
+            downloadLinkId: 'step1-download-link',
+            resetBtnId: 'step1-reset-btn',
+            endpoint: '/upload-template',
+            resultMessage: (data) => `${data.month} ${data.year} review workbook created with ${data.num_distributors} distributor tabs plus the Summary sheet.`,
+            downloadUrl: (data) => `/download/${data.job_id}/xlsx`
         });
 
-        // Step 2: Generate PDFs
-        document.getElementById('generate-pdf-btn').addEventListener('click', async () => {
-            if (!currentJobId) return;
-
-            document.getElementById('pdf-section').style.display = 'none';
-            document.getElementById('pdf-processing').classList.add('show');
-            document.getElementById('pdf-error-msg').classList.remove('show');
-
-            try {
-                const resp = await fetch(`/generate-pdfs/${currentJobId}`, { method: 'POST' });
-                const data = await resp.json();
-
-                document.getElementById('pdf-processing').classList.remove('show');
-
-                if (data.error) {
-                    document.getElementById('pdf-section').style.display = 'block';
-                    document.getElementById('pdf-error-msg').textContent = data.error;
-                    document.getElementById('pdf-error-msg').classList.add('show');
-                    return;
-                }
-
-                document.getElementById('result-title').textContent =
-                    document.getElementById('result-title').textContent.replace('Excel Ready', 'Complete');
-                document.getElementById('result-desc').textContent =
-                    document.getElementById('result-desc').textContent.replace('review then generate PDFs', `${data.num_pdfs} PDFs generated`);
-                document.getElementById('pdf-count').textContent = `${data.num_pdfs} individual PDFs, zipped`;
-                document.getElementById('dl-zip').href = `/download/${currentJobId}/zip`;
-                document.getElementById('zip-row').style.display = 'flex';
-
-            } catch (err) {
-                document.getElementById('pdf-processing').classList.remove('show');
-                document.getElementById('pdf-section').style.display = 'block';
-                document.getElementById('pdf-error-msg').textContent = 'PDF generation failed. Please try again.';
-                document.getElementById('pdf-error-msg').classList.add('show');
-            }
-        });
-
-        // Reset
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            results.classList.remove('show');
-            uploadArea.style.display = 'block';
-            currentJobId = null;
-            clearFile();
+        const step2 = createUploadStep({
+            dropzoneId: 'step2-dropzone',
+            inputId: 'step2-file-input',
+            fileInfoId: 'step2-file-info',
+            fileNameId: 'step2-file-name',
+            fileSizeId: 'step2-file-size',
+            removeBtnId: 'step2-remove-btn',
+            processBtnId: 'step2-process-btn',
+            processingId: 'step2-processing',
+            errorId: 'step2-error-msg',
+            resultId: 'step2-result',
+            resultTextId: 'step2-result-text',
+            downloadRowId: 'step2-download-row',
+            downloadLinkId: 'step2-download-link',
+            resetBtnId: 'step2-reset-btn',
+            downloadDescId: 'step2-download-desc',
+            endpoint: '/generate-pdfs-upload',
+            resultMessage: (data) => `${data.num_pdfs} distributor PDFs were created from ${data.source_name}.`,
+            downloadUrl: (data) => `/download/${data.job_id}/zip`,
+            downloadDescription: (data) => `${data.num_pdfs} distributor PDFs packaged into a single zip file.`
         });
     </script>
 </body>

@@ -5,19 +5,22 @@ automatically pushed to commissions.phillyshah.com
 
 ## What It Does
 
-1. Upload a Commission Worksheet (`.xlsx`) containing:
+1. Step 1: Upload a Commission Worksheet (`.xlsx`) containing:
    - **Invoice List** sheet — all invoices grouped by distributor code
    - **Dist Lookup** sheet — distributor code → name → contact mapping
    - **Trauma** sheet (optional) — trauma-specific invoices
 
-2. The app automatically:
+2. The app automatically creates a review workbook:
    - Detects the sales month/year from the Invoice List
    - Creates a **Summary** sheet with all distributors and totals
    - Creates **individual distributor tabs** with Maxx branding, logo, formatted headers, footer
-   - Generates **individual PDFs** for each distributor (landscape, print-ready)
-   - Packages all PDFs into a downloadable **zip file**
+   - Outputs a downloadable **Excel workbook** for accounting review
 
-3. Download the completed workbook and/or the PDF bundle.
+3. Step 2: Upload the verified Excel workbook to:
+   - Generate **individual PDFs** for each distributor (landscape, print-ready)
+   - Package all PDFs into a downloadable **zip file**
+
+4. Download the completed workbook and final PDF bundle.
 
 ## Tech Stack
 
