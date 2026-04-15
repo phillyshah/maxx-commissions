@@ -32,8 +32,8 @@ LOGO_PATH = os.path.join(os.path.dirname(__file__), 'static', 'maxx_logo.png')
 
 # ─── Styles ───────────────────────────────────────────────────────────────────
 FONT_DATE      = Font(name='Arial', size=10)
-FONT_CONTACT   = Font(name='Arial', size=10)
-FONT_DIST_LBL  = Font(name='Arial', size=12)
+FONT_CONTACT   = Font(name='Arial', size=11)
+FONT_DIST_LBL  = Font(name='Arial', size=11)
 FONT_COMM_LBL  = Font(name='Arial', size=10)
 FONT_HDR       = Font(name='Arial', size=9, bold=True)
 FONT_CODE      = Font(name='Arial', size=9, bold=True)
@@ -68,8 +68,8 @@ BORDER_THIN_B = Border(bottom=Side(style='thin'))
 BORDER_THIN_TB= Border(top=Side(style='thin'), bottom=Side(style='thin'))
 BORDER_THIN_T = Border(top=Side(style='thin'))
 
-COL_WIDTHS = {'A': 18.0, 'B': 10.33, 'C': 12.11, 'D': 14.22, 'E': 13.89,
-              'F': 41.33, 'G': 16.33, 'H': 10.0, 'I': 15.89, 'J': 16.78}
+COL_WIDTHS = {'A': 18.0, 'B': 10.33, 'C': 12.11, 'D': 14.22, 'E': 14.0,
+              'F': 30.0, 'G': 24.0, 'H': 10.0, 'I': 15.89, 'J': 16.78}
 ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 34.2, 4: 27.6, 5: 51.0}
 DATA_ROW_H = 16.05
 TOTAL_ROW_H = 18.6
@@ -154,8 +154,8 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
     # Logo
     if os.path.exists(logo_path):
         logo = XlImage(logo_path)
-        logo.width = 271
-        logo.height = 125
+        logo.width = 220
+        logo.height = 115
         logo.anchor = 'B1'
         ws.add_image(logo)
 
@@ -163,20 +163,20 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
     c = ws.cell(row=1, column=10, value=pay_date)
     c.font = FONT_DATE; c.number_format = 'm/d/yy;@'; c.alignment = ALIGN_RIGHT
 
-    # B3: contact, J3: commission label right-justified
-    if contact:
-        ws.cell(row=3, column=2, value=contact).font = FONT_CONTACT
+    # B3: distributorship name first, J3: commission label right-justified
+    ws.cell(row=3, column=2, value=f'Distributor:  {dist_name}').font = FONT_DIST_LBL
     c = ws.cell(row=3, column=10, value=commission_label)
     c.font = FONT_COMM_LBL; c.alignment = ALIGN_RIGHT
 
-    # B4: distributor
-    ws.cell(row=4, column=2, value=f'Distributor:  {dist_name}').font = FONT_DIST_LBL
+    # B4: contact name/email
+    if contact:
+        ws.cell(row=4, column=2, value=contact).font = FONT_CONTACT
 
     # Row 5: headers
     for col, text, align in [
-        (2, 'Invoice Date', ALIGN_HDR_C), (3, 'Invoice Number', ALIGN_HDR_C),
+        (2, 'Invoice Date', ALIGN_HDR_L), (3, 'Invoice Number', ALIGN_HDR_L),
         (4, 'P.O. Number', ALIGN_HDR_L), (5, 'Surgeon', ALIGN_HDR_L),
-        (6, 'Name', ALIGN_HDR_L), (7, 'Memo/ Description', ALIGN_HDR_L),
+        (6, 'Name of Facility', ALIGN_HDR_L), (7, 'Memo/ Description', ALIGN_HDR_L),
         (8, 'Rate', ALIGN_HDR_C), (9, 'Invoice Amount', ALIGN_HDR_C),
         (10, 'Commission', ALIGN_HDR_R)]:
         c = ws.cell(row=5, column=col, value=text)
@@ -224,6 +224,7 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
     ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True
     ws.print_area = f'B1:J{footer_row}'
+    ws.print_title_rows = '5:5'  # Repeat header row on every page
     return ws
 
 
@@ -426,8 +427,15 @@ def generate_pdfs(job_dir):
     for name in wb_pdf.sheetnames:
         if name in skip_sheets:
             continue
-        safe_name = re.sub(r'[<>:"/\\|?*]', '_', name).strip()
         src_ws = wb_pdf[name]
+        # Build PDF filename: "DistName_Commission Statement Paid on April 30, 2026"
+        pay_date_val = src_ws.cell(row=1, column=10).value
+        if isinstance(pay_date_val, datetime):
+            date_str = pay_date_val.strftime('%-d %B %Y')
+        else:
+            date_str = 'Unknown Date'
+        raw_file = f"{name}_Commission Statement Paid on {date_str}"
+        safe_name = re.sub(r'[<>:"/\\|?*]', '_', raw_file).strip()
         new_wb = openpyxl.Workbook()
         new_ws = new_wb.active
         new_ws.title = name[:31]
