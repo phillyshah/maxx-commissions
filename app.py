@@ -26,10 +26,20 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "1.3"
+APP_VERSION = "1.4"
 
 # Release notes (newest first)
 RELEASE_NOTES = [
+    {
+        'version': '1.4',
+        'title': 'US Date Format in PDF Filenames',
+        'description': 'PDF filenames now use US date format (MM-DD-YYYY) instead of DD Month YYYY. Example: S-Squared Surgical_Commission Statement Paid on 05-31-2026.pdf'
+    },
+    {
+        'version': '1.3',
+        'title': "What's New Feed",
+        'description': 'Added a What\'s New link in the footer showing release history.'
+    },
     {
         'version': '1.2',
         'title': 'PDF Generation Fixes',
@@ -451,7 +461,7 @@ def generate_pdfs(job_dir):
         # Build PDF filename: "DistName_Commission Statement Paid on April 30, 2026"
         pay_date_val = src_ws.cell(row=1, column=10).value
         if isinstance(pay_date_val, datetime):
-            date_str = pay_date_val.strftime('%-d %B %Y')
+            date_str = pay_date_val.strftime('%m-%d-%Y')
         else:
             date_str = 'Unknown Date'
         raw_file = f"{name}_Commission Statement Paid on {date_str}"
