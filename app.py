@@ -26,10 +26,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "1.6"
+APP_VERSION = "1.7"
 
 # Release notes (newest first)
 RELEASE_NOTES = [
+    {
+        'version': '1.7',
+        'title': 'Header Text Wrapping Fix',
+        'description': 'Column headers now always display from the top of the cell so wrapped text is never clipped. "Invoice Number" shortened to "Invoice Num". Invoice Date column width adjusted for clean display.'
+    },
     {
         'version': '1.6',
         'title': 'P.O. Number Column Fix',
@@ -88,9 +93,9 @@ FONT_SUM_DATA  = Font(name='Arial', size=10)
 FONT_SUM_BOLD  = Font(name='Arial', size=10, bold=True)
 
 W = True
-ALIGN_HDR_C  = Alignment(horizontal='center', wrap_text=W)
-ALIGN_HDR_L  = Alignment(horizontal='left', wrap_text=W)
-ALIGN_HDR_R  = Alignment(horizontal='right', wrap_text=W)
+ALIGN_HDR_C  = Alignment(horizontal='center', vertical='top', wrap_text=W)
+ALIGN_HDR_L  = Alignment(horizontal='left',   vertical='top', wrap_text=W)
+ALIGN_HDR_R  = Alignment(horizontal='right',  vertical='top', wrap_text=W)
 ALIGN_DATA_L = Alignment(horizontal='left', wrap_text=W)
 ALIGN_DATA_C = Alignment(horizontal='center', wrap_text=W)
 ALIGN_DATA_R = Alignment(horizontal='right', wrap_text=W)
@@ -110,8 +115,8 @@ BORDER_THIN_T = Border(top=Side(style='thin'))
 COL_WIDTHS = {'A': 18.0, 'B': 9.5, 'C': 12.11, 'D': 14.22, 'E': 14.0,
               'F': 30.0, 'G': 24.0, 'H': 10.0, 'I': 15.89, 'J': 16.78}
 # Min/max widths for auto-fit (columns B-J)
-COL_MIN = {2: 9.5, 3: 12, 4: 14, 5: 10, 6: 18, 7: 12, 8: 7, 9: 13, 10: 12}
-COL_MAX = {2: 12,  3: 18, 4: 35, 5: 20, 6: 50, 7: 35, 8: 10, 9: 16, 10: 16}
+COL_MIN = {2: 11,  3: 12, 4: 14, 5: 10, 6: 18, 7: 12, 8: 7, 9: 13, 10: 12}
+COL_MAX = {2: 14,  3: 18, 4: 35, 5: 20, 6: 50, 7: 35, 8: 10, 9: 16, 10: 16}
 ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 34.2, 4: 27.6, 5: 51.0}
 DATA_ROW_H = 16.05
 TOTAL_ROW_H = 18.6
@@ -244,7 +249,7 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
 
     # Row 5: headers
     for col, text, align in [
-        (2, 'Invoice Date', ALIGN_HDR_L), (3, 'Invoice Number', ALIGN_HDR_L),
+        (2, 'Invoice Date', ALIGN_HDR_L), (3, 'Invoice Num', ALIGN_HDR_L),
         (4, 'P.O. Number', ALIGN_HDR_L), (5, 'Surgeon', ALIGN_HDR_L),
         (6, 'Name of Facility', ALIGN_HDR_L), (7, 'Memo/ Description', ALIGN_HDR_L),
         (8, 'Rate', ALIGN_HDR_C), (9, 'Invoice Amount', ALIGN_HDR_C),
