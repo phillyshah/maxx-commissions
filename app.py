@@ -26,7 +26,26 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "1.2"
+APP_VERSION = "1.3"
+
+# Release notes (newest first)
+RELEASE_NOTES = [
+    {
+        'version': '1.2',
+        'title': 'PDF Generation Fixes',
+        'description': 'Column headers now repeat on every page of multi-page statements. PDFs print in landscape orientation. User edits to column widths are preserved when generating PDFs. Invoice Date column now wraps correctly in print.'
+    },
+    {
+        'version': '1.1',
+        'title': 'Light Theme & Statement Formatting',
+        'description': 'Switched to a light, high-contrast theme for easier reading. Logo resized. Distributorship name now appears above contact info. Invoice Date and Invoice Number left-justified. Column F renamed to Name of Facility. Column widths adjusted for better text fit. PDF files renamed with distributor name and payment date.'
+    },
+    {
+        'version': '1.0',
+        'title': 'Initial Release',
+        'description': 'Two-step commission statement workflow: upload a source worksheet to generate a review workbook with Summary and distributor tabs, then upload the verified workbook to create a PDF zip bundle.'
+    },
+]
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), 'static', 'maxx_logo.png')
 
@@ -517,7 +536,7 @@ def generate_pdfs(job_dir):
 
 @app.route('/')
 def index():
-    return render_template('index.html', version=APP_VERSION)
+    return render_template('index.html', version=APP_VERSION, release_notes=RELEASE_NOTES)
 
 
 @app.route('/upload', methods=['POST'])

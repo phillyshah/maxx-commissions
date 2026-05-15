@@ -361,6 +361,88 @@
             opacity: 0.7;
         }
 
+        footer .whats-new-link {
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            opacity: 1;
+        }
+
+        footer .whats-new-link:hover { text-decoration: underline; }
+
+        /* What's New Modal */
+        .wn-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .wn-overlay.show { display: flex; }
+
+        .wn-modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+            width: 92%;
+            max-width: 520px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 1.75rem;
+        }
+
+        .wn-modal h2 {
+            font-size: 1.15rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .wn-close {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0 0.25rem;
+        }
+
+        .wn-entry {
+            padding: 0.85rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .wn-entry:last-child { border-bottom: none; }
+
+        .wn-entry .wn-version {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: var(--accent-soft);
+            color: var(--accent);
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            margin-right: 0.5rem;
+        }
+
+        .wn-entry .wn-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .wn-entry .wn-desc {
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            line-height: 1.55;
+            margin-top: 0.35rem;
+        }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -486,7 +568,21 @@
             </section>
         </div>
 
-        <footer>Maxx Health Inc. - Internal Tool  ·  v{{ version }}</footer>
+        <footer>Maxx Health Inc. - Internal Tool  ·  v{{ version }}  ·  <a class="whats-new-link" onclick="document.getElementById('wn-overlay').classList.add('show')">What's New</a></footer>
+    </div>
+
+    <!-- What's New Modal -->
+    <div class="wn-overlay" id="wn-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="wn-modal">
+            <h2>What's New <button class="wn-close" onclick="document.getElementById('wn-overlay').classList.remove('show')">&times;</button></h2>
+            {% for note in release_notes %}
+            <div class="wn-entry">
+                <span class="wn-version">v{{ note.version }}</span>
+                <span class="wn-title">{{ note.title }}</span>
+                <p class="wn-desc">{{ note.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
     <script>
