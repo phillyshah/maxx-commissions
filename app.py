@@ -26,10 +26,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "1.5"
+APP_VERSION = "1.6"
 
 # Release notes (newest first)
 RELEASE_NOTES = [
+    {
+        'version': '1.6',
+        'title': 'P.O. Number Column Fix',
+        'description': 'P.O. Number column now expands wide enough to show long values like "MAX040126Distal Radius855" without cutting off text. Name of Facility column also has a wider maximum.'
+    },
     {
         'version': '1.5',
         'title': 'Auto-Fit Column Widths',
@@ -105,8 +110,8 @@ BORDER_THIN_T = Border(top=Side(style='thin'))
 COL_WIDTHS = {'A': 18.0, 'B': 9.5, 'C': 12.11, 'D': 14.22, 'E': 14.0,
               'F': 30.0, 'G': 24.0, 'H': 10.0, 'I': 15.89, 'J': 16.78}
 # Min/max widths for auto-fit (columns B-J)
-COL_MIN = {2: 9.5, 3: 12, 4: 12, 5: 10, 6: 15, 7: 12, 8: 7, 9: 13, 10: 12}
-COL_MAX = {2: 12,  3: 18, 4: 18, 5: 22, 6: 45, 7: 35, 8: 10, 9: 16, 10: 16}
+COL_MIN = {2: 9.5, 3: 12, 4: 14, 5: 10, 6: 18, 7: 12, 8: 7, 9: 13, 10: 12}
+COL_MAX = {2: 12,  3: 18, 4: 35, 5: 20, 6: 50, 7: 35, 8: 10, 9: 16, 10: 16}
 ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 34.2, 4: 27.6, 5: 51.0}
 DATA_ROW_H = 16.05
 TOTAL_ROW_H = 18.6
