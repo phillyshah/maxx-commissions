@@ -26,10 +26,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "1.4"
+APP_VERSION = "1.5"
 
 # Release notes (newest first)
 RELEASE_NOTES = [
+    {
+        'version': '1.5',
+        'title': 'Auto-Fit Column Widths',
+        'description': 'Column widths now automatically adjust to fit the actual content in each distributor tab. Long facility names and other text no longer get cut off.'
+    },
     {
         'version': '1.4',
         'title': 'US Date Format in PDF Filenames',
@@ -99,6 +104,9 @@ BORDER_THIN_T = Border(top=Side(style='thin'))
 
 COL_WIDTHS = {'A': 18.0, 'B': 9.5, 'C': 12.11, 'D': 14.22, 'E': 14.0,
               'F': 30.0, 'G': 24.0, 'H': 10.0, 'I': 15.89, 'J': 16.78}
+# Min/max widths for auto-fit (columns B-J)
+COL_MIN = {2: 9.5, 3: 12, 4: 12, 5: 10, 6: 15, 7: 12, 8: 7, 9: 13, 10: 12}
+COL_MAX = {2: 12,  3: 18, 4: 18, 5: 22, 6: 45, 7: 35, 8: 10, 9: 16, 10: 16}
 ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 34.2, 4: 27.6, 5: 51.0}
 DATA_ROW_H = 16.05
 TOTAL_ROW_H = 18.6
@@ -170,6 +178,34 @@ def parse_groups(ws):
                 current_name = str(a).strip()
             current_data.append(row_data)
     return groups
+
+
+def autofit_columns(ws, header_row, last_data_row):
+    """Auto-fit columns B-J based on actual cell content."""
+    col_letters = {2:'B', 3:'C', 4:'D', 5:'E', 6:'F', 7:'G', 8:'H', 9:'I', 10:'J'}
+    for col_num in range(2, 11):
+        max_len = 0
+        for r in range(header_row, last_data_row + 1):
+            val = ws.cell(row=r, column=col_num).value
+            if val is None:
+                continue
+            if isinstance(val, datetime):
+                text = val.strftime('%m/%d/%Y')
+            elif isinstance(val, (int, float)):
+                if col_num == 8:  # Rate
+                    text = f'{val:.0%}' if val < 1 else f'{val}%'
+                elif col_num >= 9:  # Amount/Commission
+                    text = f'{val:,.2f}'
+                else:
+                    text = str(val)
+            else:
+                text = str(val)
+            max_len = max(max_len, len(text))
+        # Apply with multiplier for Arial 9pt, clamped to min/max
+        width = max_len * 1.15 + 2
+        mn = COL_MIN.get(col_num, 8)
+        mx = COL_MAX.get(col_num, 40)
+        ws.column_dimensions[col_letters[col_num]].width = max(mn, min(mx, width))
 
 
 def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
@@ -247,6 +283,9 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
     ws.merge_cells(start_row=footer_row, start_column=2, end_row=footer_row, end_column=10)
     c = ws.cell(row=footer_row, column=2, value='Thank you for your continued support.')
     c.font = FONT_FOOTER; c.alignment = ALIGN_CENTER
+
+    # Auto-fit columns B-J to actual content
+    autofit_columns(ws, 5, row - 1)  # row-1 = last data row (before total)
 
     # Page setup
     ws.page_setup.orientation = 'landscape'
