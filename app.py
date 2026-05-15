@@ -26,7 +26,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "1.1"
+APP_VERSION = "1.2"
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), 'static', 'maxx_logo.png')
 
@@ -68,7 +68,7 @@ BORDER_THIN_B = Border(bottom=Side(style='thin'))
 BORDER_THIN_TB= Border(top=Side(style='thin'), bottom=Side(style='thin'))
 BORDER_THIN_T = Border(top=Side(style='thin'))
 
-COL_WIDTHS = {'A': 18.0, 'B': 10.33, 'C': 12.11, 'D': 14.22, 'E': 14.0,
+COL_WIDTHS = {'A': 18.0, 'B': 9.5, 'C': 12.11, 'D': 14.22, 'E': 14.0,
               'F': 30.0, 'G': 24.0, 'H': 10.0, 'I': 15.89, 'J': 16.78}
 ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 34.2, 4: 27.6, 5: 51.0}
 DATA_ROW_H = 16.05
@@ -221,6 +221,7 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
 
     # Page setup
     ws.page_setup.orientation = 'landscape'
+    ws.page_setup.paperSize = 1  # Letter
     ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True
     ws.print_area = f'B1:J{footer_row}'
@@ -462,10 +463,20 @@ def generate_pdfs(job_dir):
                 new_img.width = img.width; new_img.height = img.height
                 new_img.anchor = 'B1'
                 new_ws.add_image(new_img)
+        # Copy print settings from source (preserves user edits)
         if src_ws.print_area:
             new_ws.print_area = src_ws.print_area
-        new_ws.page_setup.orientation = 'landscape'
-        new_ws.page_setup.fitToWidth = 1; new_ws.page_setup.fitToHeight = 0
+        if src_ws.print_title_rows:
+            new_ws.print_title_rows = src_ws.print_title_rows
+        if src_ws.print_title_cols:
+            new_ws.print_title_cols = src_ws.print_title_cols
+        # Page setup — copy from source, fall back to landscape Letter
+        new_ws.page_setup.orientation = src_ws.page_setup.orientation or 'landscape'
+        new_ws.page_setup.paperSize = src_ws.page_setup.paperSize or 1  # 1 = Letter
+        new_ws.page_setup.fitToWidth = src_ws.page_setup.fitToWidth if src_ws.page_setup.fitToWidth else 1
+        new_ws.page_setup.fitToHeight = src_ws.page_setup.fitToHeight if src_ws.page_setup.fitToHeight is not None else 0
+        if src_ws.page_setup.scale:
+            new_ws.page_setup.scale = src_ws.page_setup.scale
         new_ws.sheet_properties.pageSetUpPr.fitToPage = True
         new_wb.save(os.path.join(temp_dir, f"{safe_name}.xlsx"))
         new_wb.close()
