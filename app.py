@@ -26,10 +26,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "1.7"
+APP_VERSION = "1.8"
 
 # Release notes (newest first)
 RELEASE_NOTES = [
+    {
+        'version': '1.8',
+        'title': 'Spacing Above Column Headers',
+        'description': 'Added extra spacing between the rep contact info and the column header row so the table no longer looks scrunched.'
+    },
     {
         'version': '1.7',
         'title': 'Header Text Wrapping Fix',
@@ -117,7 +122,7 @@ COL_WIDTHS = {'A': 18.0, 'B': 9.5, 'C': 12.11, 'D': 14.22, 'E': 14.0,
 # Min/max widths for auto-fit (columns B-J)
 COL_MIN = {2: 11,  3: 12, 4: 14, 5: 10, 6: 18, 7: 12, 8: 7, 9: 13, 10: 12}
 COL_MAX = {2: 14,  3: 18, 4: 35, 5: 20, 6: 50, 7: 35, 8: 10, 9: 16, 10: 16}
-ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 34.2, 4: 27.6, 5: 51.0}
+ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 34.2, 4: 57.0, 5: 51.0}
 DATA_ROW_H = 16.05
 TOTAL_ROW_H = 18.6
 SUM_COL_WIDTHS = {'A': 26.0, 'B': 17.89, 'C': 19.44, 'D': 13.11,
