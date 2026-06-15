@@ -1,18 +1,52 @@
 name: Deploy to Hostinger
 
+# Auto-deploy runs on a SELF-HOSTED runner installed on the VPS itself.
+#
+# Why not the usual GitHub-hosted runner + SSH? GitHub's cloud runners cannot
+# reach this VPS on port 22 (the Hostinger/host firewall blocks inbound SSH from
+# GitHub's runner IP ranges), so the old appleboy/ssh-action workflow failed with
+# "dial tcp 72.62.174.193:22: i/o timeout" on every push and nothing deployed.
+#
+# A self-hosted runner connects OUTBOUND to GitHub, so no inbound firewall hole
+# is needed. The deploy steps below run locally on the box as the runner user.
+# See README.md ("Deployment") for how the runner is installed/registered.
+
 on:
   push:
     branches:
       - main
+  workflow_dispatch: {}   # allow manual "Run workflow" from the Actions tab
+
+# Never let two deploys run at once.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Targets the runner installed on the VPS (registered with the
+    # "commission-app" label). It does NOT run on GitHub's cloud runners.
+    runs-on: [self-hosted, commission-app]
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: cd /opt/commission-app && git pull origin main && source venv/bin/activate && pip install -r requirements.txt && systemctl restart commission-app
+      - name: Pull latest main and restart the service
+        run: |
+          set -euo pipefail
+          cd /opt/commission-app
+
+          # The VPS is a deploy target that must mirror origin/main exactly.
+          # Use reset --hard (not "git pull") so a stray local edit on the
+          # server can never abort the deploy with "local changes would be
+          # overwritten" -- which is exactly what bit us when gunicorn.conf.py
+          # had been hand-edited on the box. Make changes in git, not here.
+          git fetch origin main
+          git reset --hard origin/main
+
+          # Install/refresh dependencies inside the app's virtualenv.
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+          # Restart gunicorn and confirm it actually came back up.
+          systemctl restart commission-app
+          sleep 2
+          systemctl is-active --quiet commission-app
+          echo "Deployed $(git rev-parse --short HEAD) and commission-app is active."
