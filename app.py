@@ -32,8 +32,8 @@ APP_VERSION = "2.0"
 RELEASE_NOTES = [
     {
         'version': '2.0',
-        'title': 'Download Bug Fix',
-        'description': 'Fixed a critical bug where clicking "Download Excel" after Step 1 could return the original uploaded source file instead of the generated review workbook. The download now always serves the correct Commission_Statements file. Also fixed the Summary sheet year (was hardcoded to 2026; now uses the year detected from the Invoice List). Added a clear error if no distributor groups are found in the Invoice List.'
+        'title': 'Download & Reliability Fixes',
+        'description': 'Fixed a critical bug where clicking "Download Excel" after Step 1 could return the original uploaded source file instead of the generated review workbook. The download now always serves the correct Commission_Statements file. Also fixed the Summary sheet year (was hardcoded to 2026; now uses the year detected from the Invoice List), added a clear error if no distributor groups are found in the Invoice List, and PDF generation now reports a clear error if LibreOffice fails instead of silently producing an empty zip.'
     },
     {
         'version': '1.9',
@@ -583,24 +583,50 @@ def generate_pdfs(job_dir):
 
     wb_pdf.close()
 
-    # Convert to PDF
+    # Convert to PDF.
+    # NOTE: soffice returns exit code 0 even when it fails to load/convert a file
+    # (e.g. "Error: source file could not be loaded"), so we can't trust the
+    # return code alone — we must verify the expected .pdf was actually written
+    # and surface soffice's output if it wasn't. Otherwise a failed conversion
+    # silently produces an empty zip and the UI reports a false success.
     lo_home = os.path.join(job_dir, 'lo_home')
     os.makedirs(lo_home, exist_ok=True)
+    failures = []
+    expected = 0
     for fname in sorted(os.listdir(temp_dir)):
         if not fname.endswith('.xlsx'): continue
-        subprocess.run(
-            ['soffice', '--headless', '--norestore', '--calc',
-             '--convert-to', 'pdf', '--outdir', pdf_dir, os.path.join(temp_dir, fname)],
-            capture_output=True, text=True, timeout=120,
-            env={**os.environ, 'HOME': lo_home})
+        expected += 1
+        expected_pdf = os.path.join(pdf_dir, fname[:-5] + '.pdf')
+        try:
+            proc = subprocess.run(
+                ['soffice', '--headless', '--norestore', '--calc',
+                 '--convert-to', 'pdf', '--outdir', pdf_dir, os.path.join(temp_dir, fname)],
+                capture_output=True, text=True, timeout=120,
+                env={**os.environ, 'HOME': lo_home})
+            if not os.path.exists(expected_pdf):
+                detail = (proc.stderr or proc.stdout or '').strip().splitlines()
+                detail = detail[-1] if detail else f'exit code {proc.returncode}'
+                failures.append(f'{fname[:-5]}: {detail}')
+        except subprocess.TimeoutExpired:
+            failures.append(f'{fname[:-5]}: conversion timed out')
+
+    num_pdfs = len([f for f in os.listdir(pdf_dir) if f.endswith('.pdf')])
+
+    # If nothing converted, fail loudly rather than returning an empty zip.
+    if expected and num_pdfs == 0:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        shutil.rmtree(lo_home, ignore_errors=True)
+        msg = "PDF conversion failed — LibreOffice could not generate any PDFs."
+        if failures:
+            msg += " First error: " + failures[0]
+        msg += " Check that LibreOffice (soffice) is installed and working on the server."
+        raise ValueError(msg)
 
     # Zip PDFs
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         for pdf in sorted(os.listdir(pdf_dir)):
             if pdf.endswith('.pdf'):
                 zf.write(os.path.join(pdf_dir, pdf), pdf)
-
-    num_pdfs = len([f for f in os.listdir(pdf_dir) if f.endswith('.pdf')])
 
     # Clean up temp
     shutil.rmtree(temp_dir, ignore_errors=True)
@@ -610,6 +636,7 @@ def generate_pdfs(job_dir):
         'zip_path': zip_path,
         'zip_name': zip_name,
         'num_pdfs': num_pdfs,
+        'partial_failures': failures,
     }
 
 
