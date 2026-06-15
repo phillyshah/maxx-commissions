@@ -1,0 +1,27 @@
+# Reference copy of the Traefik file-provider route for this app.
+#
+# On the production VPS this lives at:
+#   /opt/traefik/dynamic/commissions-phillyshah-com.yml
+# Traefik watches that directory (providers.file.watch: true) and reloads
+# automatically — no Traefik restart needed when this file changes.
+#
+# IMPORTANT: the backend port is 5001, NOT 5000. Port 5000 is used by the
+# unrelated tmcheck app (tm.phillyshah.com) on the same host. Keeping this app
+# on 5001 is what stops commissions.phillyshah.com from accidentally serving
+# the tmcheck site. See gunicorn.conf.py for the matching bind.
+http:
+  routers:
+    commissions-phillyshah-com:
+      rule: "Host(`commissions.phillyshah.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: commissions-phillyshah-com-svc
+  services:
+    commissions-phillyshah-com-svc:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:5001"
+        responseForwarding:
+          flushInterval: "1ms"
