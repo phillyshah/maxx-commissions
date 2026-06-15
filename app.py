@@ -26,10 +26,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "1.9"
+APP_VERSION = "2.0"
 
 # Release notes (newest first)
 RELEASE_NOTES = [
+    {
+        'version': '2.0',
+        'title': 'Download Bug Fix',
+        'description': 'Fixed a critical bug where clicking "Download Excel" after Step 1 could return the original uploaded source file instead of the generated review workbook. The download now always serves the correct Commission_Statements file. Also fixed the Summary sheet year (was hardcoded to 2026; now uses the year detected from the Invoice List). Added a clear error if no distributor groups are found in the Invoice List.'
+    },
     {
         'version': '1.9',
         'title': 'Column Header Alignment Fix',
@@ -317,13 +322,13 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
     return ws
 
 
-def create_summary(wb, groups, lookup, commission_label):
+def create_summary(wb, groups, lookup, commission_label, year=None):
     ws = wb.create_sheet(title='Summary', index=0)
     for col, w in SUM_COL_WIDTHS.items():
         ws.column_dimensions[col].width = w
 
     ws.merge_cells('A1:G1'); ws.row_dimensions[1].height = 15.75
-    c = ws.cell(row=1, column=1, value=2026)
+    c = ws.cell(row=1, column=1, value=year)
     c.font = FONT_SUM_TITLE; c.alignment = ALIGN_CENTER
 
     ws.merge_cells('A2:G2'); ws.row_dimensions[2].height = 15.75
@@ -416,11 +421,18 @@ def process_excel(input_path, job_dir):
     lookup = load_lookup(wb_src)
     groups = parse_groups(wb_src['Invoice List'])
 
+    if not groups:
+        wb_src.close()
+        raise ValueError(
+            "No distributor groups found in Invoice List. "
+            "Expected data rows followed by 'Total for ...' summary rows starting at row 6."
+        )
+
     # Build output workbook
     wb_out = openpyxl.Workbook()
     wb_out.remove(wb_out.active)
 
-    create_summary(wb_out, groups, lookup, commission_label)
+    create_summary(wb_out, groups, lookup, commission_label, year=year)
 
     # Copy source sheets
     for src_name in wb_src.sheetnames:
@@ -703,8 +715,10 @@ def download(job_id, filetype):
     if not os.path.exists(job_dir):
         return 'File not found', 404
 
-    for fname in os.listdir(job_dir):
-        if filetype == 'xlsx' and fname.endswith('.xlsx'):
+    for fname in sorted(os.listdir(job_dir)):
+        # For xlsx, only serve the generated output — never the uploaded source file.
+        # Generated files always start with "Commission_Statements_".
+        if filetype == 'xlsx' and fname.startswith('Commission_Statements_') and fname.endswith('.xlsx'):
             return send_file(os.path.join(job_dir, fname), as_attachment=True, download_name=fname)
         if filetype == 'zip' and fname.endswith('.zip'):
             return send_file(os.path.join(job_dir, fname), as_attachment=True, download_name=fname)
