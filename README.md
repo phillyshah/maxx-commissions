@@ -27,24 +27,51 @@ automatically pushed to commissions.phillyshah.com
 - **Python 3 / Flask** — backend processing
 - **openpyxl** — Excel file generation
 - **LibreOffice Calc** (headless) — PDF conversion
-- **Gunicorn** — production WSGI server
-- **Nginx** — reverse proxy + SSL termination
+- **Gunicorn** — production WSGI server (binds `0.0.0.0:5002`)
+- **Traefik v3** — reverse proxy + automatic Let's Encrypt SSL
 
 ## Deployment (Hostinger Ubuntu VPS)
 
+> **This server uses Traefik, not nginx.** Do **not** run `nginx`/`certbot` here
+> — Traefik (running as a Docker container in `/opt/traefik`) already owns ports
+> 80/443 and issues certs via ACME. Installing nginx will fail to bind port 80
+> and conflict with Traefik. The legacy `deploy.sh` / `nginx-commissions.conf`
+> in this repo are kept only for reference and are **not** used in production.
+
+The app runs as a systemd service (`commission-app.service`) behind Traefik:
+
 ```bash
-# 1. Clone the repo
-git clone https://github.com/YOUR_USER/commission-app.git /opt/commission-app
+# 1. Code lives in /opt/commission-app and runs gunicorn on 0.0.0.0:5002
+#    (port 5002 — see gunicorn.conf.py and "Ports" below for why)
 
-# 2. Run the deploy script
-cd /opt/commission-app
-sudo bash deploy.sh
+# 2. Traefik routes the domain via a file-provider config:
+#    /opt/traefik/dynamic/commissions-phillyshah-com.yml
+#      Host(`commissions.phillyshah.com`) → http://host.docker.internal:5002
+#    See deploy/traefik-commissions.yml in this repo for the reference route.
 
-# 3. Point DNS: commissions.phillyshah.com → your VPS IP
+# 3. Deploys happen automatically via .github/workflows/deploy.yml on push to
+#    main (git pull + pip install + systemctl restart commission-app).
+#    Requires repo secrets: SERVER_HOST, SERVER_USER, SSH_PRIVATE_KEY.
 
-# 4. Enable SSL
-sudo certbot --nginx -d commissions.phillyshah.com
+# Manual deploy / restart:
+cd /opt/commission-app && git pull && \
+  source venv/bin/activate && pip install -r requirements.txt && \
+  sudo systemctl restart commission-app
 ```
+
+### Ports (important)
+
+The same VPS runs three separate gunicorn apps. Each must have its own port:
+
+| Port  | App                              | Domain                     |
+|-------|----------------------------------|----------------------------|
+| 5000  | tmcheck (`tmcheck.service`)      | tm.phillyshah.com          |
+| 5001  | MO Commission (`mo-commission-app.service`) | mo-commissions.90ten.life |
+| 5002  | **This app** (`commission-app.service`) | **commissions.phillyshah.com** |
+
+If two apps share a port, only one binds and the other crash-loops — which is
+exactly how `commissions.phillyshah.com` ended up serving the tmcheck site (then
+the MO site). This app must stay on **5002** and Traefik must route to 5002.
 
 ## Local Development
 
@@ -53,7 +80,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 python app.py
-# Open http://localhost:5000
+# Open http://localhost:5000  (Flask dev server; gunicorn uses 5001 in prod)
 ```
 
 ## File Structure
@@ -62,10 +89,14 @@ python app.py
 commission-app/
 ├── app.py                    # Flask app + all processing logic
 ├── requirements.txt
-├── gunicorn.conf.py          # Production server config
+├── gunicorn.conf.py          # Production server config (binds 0.0.0.0:5001)
 ├── commission-app.service    # systemd service
-├── nginx-commissions.conf    # Nginx site config
-├── deploy.sh                 # One-command server setup
+├── .github/workflows/
+│   └── deploy.yml            # Auto-deploy on push to main (SSH)
+├── deploy/
+│   └── traefik-commissions.yml  # Reference Traefik route (→ :5001)
+├── nginx-commissions.conf    # LEGACY — not used (server runs Traefik)
+├── deploy.sh                 # LEGACY — not used (installs nginx; do not run)
 ├── cleanup.sh                # Cron job for old file cleanup
 ├── static/
 │   └── maxx_logo.png         # Maxx Health logo

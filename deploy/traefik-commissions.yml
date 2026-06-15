@@ -1,0 +1,28 @@
+# Reference copy of the Traefik file-provider route for this app.
+#
+# On the production VPS this lives at:
+#   /opt/traefik/dynamic/commissions-phillyshah-com.yml
+# Traefik watches that directory (providers.file.watch: true) and reloads
+# automatically — no Traefik restart needed when this file changes.
+#
+# IMPORTANT: the backend port is 5002. The host runs three gunicorn apps:
+#   :5000 = tmcheck (tm.phillyshah.com), :5001 = MO Commission
+#   (mo-commissions.90ten.life), :5002 = this Maxx Health app. Pointing this
+#   route at the wrong port makes commissions.phillyshah.com serve the wrong
+#   app. See gunicorn.conf.py for the matching bind.
+http:
+  routers:
+    commissions-phillyshah-com:
+      rule: "Host(`commissions.phillyshah.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: commissions-phillyshah-com-svc
+  services:
+    commissions-phillyshah-com-svc:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:5002"
+        responseForwarding:
+          flushInterval: "1ms"

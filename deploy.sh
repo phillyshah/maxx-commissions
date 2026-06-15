@@ -1,8 +1,21 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════════════════════
-# Maxx Commission App — Deploy to Hostinger Ubuntu VPS
-# Run as root: sudo bash deploy.sh
+# ⚠️  LEGACY / DO NOT RUN ON THE PRODUCTION VPS  ⚠️
+#
+# This script installs and configures **nginx + certbot**. The production server
+# does NOT use nginx — it uses **Traefik** (a Docker container in /opt/traefik)
+# which already owns ports 80/443 and issues Let's Encrypt certs via ACME.
+#
+# Running this will fail to bind port 80 ("Address already in use") and conflict
+# with Traefik. It is kept only for historical reference. For real deployment see
+# README.md ("Deployment") and deploy/traefik-commissions.yml.
+#
+# Maxx Commission App — Deploy to Hostinger Ubuntu VPS (legacy nginx flavour)
 # ═══════════════════════════════════════════════════════════════════════════════
+
+echo "This legacy nginx deploy script is not used in production (the server runs Traefik)." >&2
+echo "See README.md and deploy/traefik-commissions.yml. Aborting." >&2
+exit 1
 
 set -e
 
