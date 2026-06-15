@@ -27,7 +27,7 @@ automatically pushed to commissions.phillyshah.com
 - **Python 3 / Flask** — backend processing
 - **openpyxl** — Excel file generation
 - **LibreOffice Calc** (headless) — PDF conversion
-- **Gunicorn** — production WSGI server (binds `0.0.0.0:5001`)
+- **Gunicorn** — production WSGI server (binds `0.0.0.0:5002`)
 - **Traefik v3** — reverse proxy + automatic Let's Encrypt SSL
 
 ## Deployment (Hostinger Ubuntu VPS)
@@ -41,12 +41,12 @@ automatically pushed to commissions.phillyshah.com
 The app runs as a systemd service (`commission-app.service`) behind Traefik:
 
 ```bash
-# 1. Code lives in /opt/commission-app and runs gunicorn on 0.0.0.0:5001
-#    (port 5001, NOT 5000 — see gunicorn.conf.py for why)
+# 1. Code lives in /opt/commission-app and runs gunicorn on 0.0.0.0:5002
+#    (port 5002 — see gunicorn.conf.py and "Ports" below for why)
 
 # 2. Traefik routes the domain via a file-provider config:
 #    /opt/traefik/dynamic/commissions-phillyshah-com.yml
-#      Host(`commissions.phillyshah.com`) → http://host.docker.internal:5001
+#      Host(`commissions.phillyshah.com`) → http://host.docker.internal:5002
 #    See deploy/traefik-commissions.yml in this repo for the reference route.
 
 # 3. Deploys happen automatically via .github/workflows/deploy.yml on push to
@@ -59,12 +59,19 @@ cd /opt/commission-app && git pull && \
   sudo systemctl restart commission-app
 ```
 
-### Port 5001 (important)
+### Ports (important)
 
-The same VPS also hosts an unrelated **tmcheck** app (`tm.phillyshah.com`) on
-`0.0.0.0:5000`. If this app is also put on 5000, only one can bind the port and
-the other crash-loops — which previously made `commissions.phillyshah.com` serve
-the tmcheck site. This app must stay on **5001** and Traefik must route to 5001.
+The same VPS runs three separate gunicorn apps. Each must have its own port:
+
+| Port  | App                              | Domain                     |
+|-------|----------------------------------|----------------------------|
+| 5000  | tmcheck (`tmcheck.service`)      | tm.phillyshah.com          |
+| 5001  | MO Commission (`mo-commission-app.service`) | mo-commissions.90ten.life |
+| 5002  | **This app** (`commission-app.service`) | **commissions.phillyshah.com** |
+
+If two apps share a port, only one binds and the other crash-loops — which is
+exactly how `commissions.phillyshah.com` ended up serving the tmcheck site (then
+the MO site). This app must stay on **5002** and Traefik must route to 5002.
 
 ## Local Development
 

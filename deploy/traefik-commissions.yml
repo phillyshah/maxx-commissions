@@ -5,10 +5,11 @@
 # Traefik watches that directory (providers.file.watch: true) and reloads
 # automatically — no Traefik restart needed when this file changes.
 #
-# IMPORTANT: the backend port is 5001, NOT 5000. Port 5000 is used by the
-# unrelated tmcheck app (tm.phillyshah.com) on the same host. Keeping this app
-# on 5001 is what stops commissions.phillyshah.com from accidentally serving
-# the tmcheck site. See gunicorn.conf.py for the matching bind.
+# IMPORTANT: the backend port is 5002. The host runs three gunicorn apps:
+#   :5000 = tmcheck (tm.phillyshah.com), :5001 = MO Commission
+#   (mo-commissions.90ten.life), :5002 = this Maxx Health app. Pointing this
+#   route at the wrong port makes commissions.phillyshah.com serve the wrong
+#   app. See gunicorn.conf.py for the matching bind.
 http:
   routers:
     commissions-phillyshah-com:
@@ -22,6 +23,6 @@ http:
     commissions-phillyshah-com-svc:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:5001"
+          - url: "http://host.docker.internal:5002"
         responseForwarding:
           flushInterval: "1ms"
