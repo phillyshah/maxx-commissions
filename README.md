@@ -40,7 +40,7 @@ automatically pushed to commissions.phillyshah.com
 
 The app runs as a systemd service (`commission-app.service`) behind Traefik:
 
-```bash
+```text
 # 1. Code lives in /opt/commission-app and runs gunicorn on 0.0.0.0:5002
 #    (port 5002 — see gunicorn.conf.py and "Ports" below for why)
 
@@ -49,12 +49,56 @@ The app runs as a systemd service (`commission-app.service`) behind Traefik:
 #      Host(`commissions.phillyshah.com`) → http://host.docker.internal:5002
 #    See deploy/traefik-commissions.yml in this repo for the reference route.
 
-# 3. Deploys happen automatically via .github/workflows/deploy.yml on push to
-#    main (git pull + pip install + systemctl restart commission-app).
-#    Requires repo secrets: SERVER_HOST, SERVER_USER, SSH_PRIVATE_KEY.
+# 3. PDF generation (Step 2) shells out to LibreOffice (`soffice`). It MUST be
+#    installed on the host: `sudo apt-get install -y libreoffice-calc`.
+```
 
-# Manual deploy / restart:
-cd /opt/commission-app && git pull && \
+### Auto-deploy: self-hosted GitHub Actions runner
+
+Pushes to `main` auto-deploy via `.github/workflows/deploy.yml`, which runs on a
+**self-hosted runner installed on the VPS** (labels: `self-hosted`,
+`commission-app`).
+
+> **Why self-hosted and not the usual SSH deploy?** GitHub's cloud runners
+> **cannot reach this VPS on port 22** — the host firewall blocks inbound SSH
+> from GitHub's runner IP ranges, so the old `appleboy/ssh-action` workflow
+> failed on every push with `dial tcp 72.62.174.193:22: i/o timeout` and nothing
+> deployed. A self-hosted runner connects **outbound** to GitHub, so no inbound
+> firewall hole is needed. Do **not** revert to the SSH approach unless the
+> firewall is opened to GitHub's IPs (not recommended).
+
+The deploy job does `git fetch && git reset --hard origin/main` (not `git pull`)
+so the box always mirrors `main` exactly — see the warning below about not
+hand-editing files on the server.
+
+**One-time runner install on the VPS** (as root). Get a registration `<TOKEN>`
+from the repo: **Settings → Actions → Runners → New self-hosted runner**.
+
+```bash
+mkdir -p /opt/actions-runner && cd /opt/actions-runner
+RUNNER_VERSION=$(curl -fsSL https://api.github.com/repos/actions/runner/releases/latest \
+  | grep -oP '"tag_name": "v\K[^"]+')
+curl -fsSL -o runner.tar.gz \
+  "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+tar xzf runner.tar.gz
+
+export RUNNER_ALLOW_RUNASROOT=1   # the deploy needs systemctl; runner runs as root
+./config.sh --url https://github.com/phillyshah/maxx-commissions \
+  --token <TOKEN> --name commission-vps --labels commission-app \
+  --unattended --replace
+
+./svc.sh install      # install + run as a systemd service (survives reboot)
+./svc.sh start
+./svc.sh status       # should show "active (running)"
+```
+
+After this, the (now unused) `SERVER_HOST` / `SERVER_USER` / `SSH_PRIVATE_KEY`
+repo secrets can be deleted.
+
+**Manual deploy / restart** (if you ever need to bypass the runner):
+
+```bash
+cd /opt/commission-app && git fetch origin main && git reset --hard origin/main && \
   source venv/bin/activate && pip install -r requirements.txt && \
   sudo systemctl restart commission-app
 ```
@@ -73,6 +117,15 @@ If two apps share a port, only one binds and the other crash-loops — which is
 exactly how `commissions.phillyshah.com` ended up serving the tmcheck site (then
 the MO site). This app must stay on **5002** and Traefik must route to 5002.
 
+### ⚠️ Do not hand-edit files on the server
+
+`/opt/commission-app` is a **deploy target that mirrors `origin/main`**. The
+deploy resets hard to `main`, so any local edit on the box is **discarded** on
+the next deploy — and before this was automated, a hand-edit to
+`gunicorn.conf.py` (changing the port to 5002) caused `git pull` to abort with
+*"Your local changes would be overwritten by merge."* Make every change in git
+and let it deploy; never edit files directly on the VPS.
+
 ## Local Development
 
 ```bash
@@ -80,7 +133,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 python app.py
-# Open http://localhost:5000  (Flask dev server; gunicorn uses 5001 in prod)
+# Open http://localhost:5000  (Flask dev server; gunicorn binds 0.0.0.0:5002 in prod)
 ```
 
 ## File Structure
@@ -89,12 +142,12 @@ python app.py
 commission-app/
 ├── app.py                    # Flask app + all processing logic
 ├── requirements.txt
-├── gunicorn.conf.py          # Production server config (binds 0.0.0.0:5001)
+├── gunicorn.conf.py          # Production server config (binds 0.0.0.0:5002)
 ├── commission-app.service    # systemd service
 ├── .github/workflows/
-│   └── deploy.yml            # Auto-deploy on push to main (SSH)
+│   └── deploy.yml            # Auto-deploy on push to main (self-hosted runner)
 ├── deploy/
-│   └── traefik-commissions.yml  # Reference Traefik route (→ :5001)
+│   └── traefik-commissions.yml  # Reference Traefik route (→ :5002)
 ├── nginx-commissions.conf    # LEGACY — not used (server runs Traefik)
 ├── deploy.sh                 # LEGACY — not used (installs nginx; do not run)
 ├── cleanup.sh                # Cron job for old file cleanup
