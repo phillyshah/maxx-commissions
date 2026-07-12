@@ -27,10 +27,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "2.1"
+APP_VERSION = "2.2"
 
 # Release notes (newest first)
 RELEASE_NOTES = [
+    {
+        'version': '2.2',
+        'title': 'PDF Logo & Rendering Fixes',
+        'description': 'Fixed a bug where the logo could overlap and hide the left-side column headers (Invoice Date, Invoice Num, P.O. Number, Surgeon, Name of Facility) on some PDFs — the logo is now always inserted at a fixed, header-safe size. Also: long facility/memo/P.O. values now grow their row instead of being clipped, large totals no longer risk showing as "####", the Invoice Amount header is right-aligned over its numbers, and invoice dates render in a consistent MM/DD/YYYY format.'
+    },
     {
         'version': '2.1',
         'title': 'PDF Column Width & Row Clipping Fix',
@@ -137,7 +142,9 @@ COL_WIDTHS = {'A': 18.0, 'B': 9.5, 'C': 12.11, 'D': 14.22, 'E': 14.0,
               'F': 30.0, 'G': 24.0, 'H': 10.0, 'I': 15.89, 'J': 16.78}
 # Min/max widths for auto-fit (columns B-J)
 COL_MIN = {2: 11,  3: 12, 4: 14, 5: 10, 6: 18, 7: 12, 8: 7, 9: 13, 10: 12}
-COL_MAX = {2: 14,  3: 18, 4: 35, 5: 20, 6: 50, 7: 35, 8: 10, 9: 16, 10: 16}
+# 9/10 (Invoice Amount / Commission) get extra headroom so large totals — which
+# carry a "$" prefix the data rows don't — never render as "####".
+COL_MAX = {2: 14,  3: 18, 4: 35, 5: 20, 6: 50, 7: 35, 8: 10, 9: 18, 10: 18}
 ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 34.2, 4: 57.0, 5: 30.0}
 DATA_ROW_H = 16.05
 TOTAL_ROW_H = 18.6
@@ -225,8 +232,8 @@ def autofit_columns(ws, header_row, last_data_row):
             elif isinstance(val, (int, float)):
                 if col_num == 8:  # Rate
                     text = f'{val:.0%}' if val < 1 else f'{val}%'
-                elif col_num >= 9:  # Amount/Commission
-                    text = f'{val:,.2f}'
+                elif col_num >= 9:  # Amount/Commission — total row adds a "$"
+                    text = f'${val:,.2f}'
                 else:
                     text = str(val)
             else:
@@ -239,6 +246,25 @@ def autofit_columns(ws, header_row, last_data_row):
         ws.column_dimensions[col_letters[col_num]].width = max(mn, min(mx, width))
 
 
+def add_logo(ws, logo_path=LOGO_PATH):
+    """Insert the Maxx logo at a fixed, header-safe size (220x115 px @ B1).
+
+    Used by BOTH create_tab (Step 1) and generate_pdfs (Step 2) so the two can
+    never diverge. The size is deliberately fixed and NOT copied from a source
+    image: after an Excel round-trip the stored logo can report a much larger
+    size (e.g. 453x235), and a floating image that big anchored at B1 paints its
+    white background over the left header cells (row 5), erasing "Invoice Date /
+    Invoice Num / P.O. Number / Surgeon / Name of Facility" in the PDF. At
+    220x115 the logo ends well above the header row.
+    """
+    if os.path.exists(logo_path):
+        logo = XlImage(logo_path)
+        logo.width = 220
+        logo.height = 115
+        logo.anchor = 'B1'
+        ws.add_image(logo)
+
+
 def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
                total_amount, total_commission, pay_date, commission_label, logo_path):
     ws = wb.create_sheet(title=tab_name[:31])
@@ -248,12 +274,7 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
         ws.row_dimensions[rn].height = h
 
     # Logo
-    if os.path.exists(logo_path):
-        logo = XlImage(logo_path)
-        logo.width = 220
-        logo.height = 115
-        logo.anchor = 'B1'
-        ws.add_image(logo)
+    add_logo(ws, logo_path)
 
     # J1: date right-justified
     c = ws.cell(row=1, column=10, value=pay_date)
@@ -273,7 +294,7 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
         (2, 'Invoice Date', ALIGN_HDR_L), (3, 'Invoice Num', ALIGN_HDR_L),
         (4, 'P.O. Number', ALIGN_HDR_L), (5, 'Surgeon', ALIGN_HDR_L),
         (6, 'Name of Facility', ALIGN_HDR_L), (7, 'Memo/ Description', ALIGN_HDR_L),
-        (8, 'Rate', ALIGN_HDR_C), (9, 'Invoice Amount', ALIGN_HDR_C),
+        (8, 'Rate', ALIGN_HDR_C), (9, 'Invoice Amount', ALIGN_HDR_R),
         (10, 'Commission', ALIGN_HDR_R)]:
         c = ws.cell(row=5, column=col, value=text)
         c.font = FONT_HDR; c.alignment = align
@@ -284,10 +305,12 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
     ws.cell(row=6, column=1, value=code).font = FONT_CODE
     ws.cell(row=6, column=1).alignment = ALIGN_CODE_L
 
-    # Data rows
+    # Data rows.
+    # Note: no fixed row height is set here on purpose. A fixed height clips any
+    # value that wraps to a second line (long facility/memo/P.O.). Leaving the
+    # data rows auto-height lets LibreOffice/Excel grow them to fit wrapped text.
     row = 7
     for i, d in enumerate(data_rows):
-        ws.row_dimensions[row].height = DATA_ROW_H
         if i == 0 and d.get(1):
             ws.cell(row=row, column=1, value=d[1]).font = FONT_CODE
         for col in range(2, 11):
@@ -295,7 +318,12 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
             if val is not None:
                 c = ws.cell(row=row, column=col, value=val)
                 c.font = FONT_DATA
-                if col <= 7: c.alignment = ALIGN_DATA_L
+                if col <= 7:
+                    c.alignment = ALIGN_DATA_L
+                    # Invoice Date: pin a US format so real datetimes match the
+                    # string style used elsewhere (no-op for pre-formatted strings).
+                    if col == 2:
+                        c.number_format = 'mm/dd/yyyy'
                 elif col == 8: c.alignment = ALIGN_DATA_C; c.number_format = '0%'
                 else: c.alignment = ALIGN_DATA_R; c.number_format = '#,##0.00\\ _€'
         row += 1
@@ -315,8 +343,9 @@ def create_tab(wb, tab_name, code, dist_name, contact, data_rows,
     c = ws.cell(row=footer_row, column=2, value='Thank you for your continued support.')
     c.font = FONT_FOOTER; c.alignment = ALIGN_CENTER
 
-    # Auto-fit columns B-J to actual content
-    autofit_columns(ws, 5, row - 1)  # row-1 = last data row (before total)
+    # Auto-fit columns B-J to actual content, INCLUDING the total row (`row`)
+    # so the larger, $-prefixed totals in cols I/J are accounted for.
+    autofit_columns(ws, 5, row)
 
     # Page setup
     ws.page_setup.orientation = 'landscape'
@@ -455,7 +484,8 @@ def process_excel(input_path, job_dir):
             for ci in range(start, end + 1):
                 new_ws.column_dimensions[get_column_letter(ci)].width = width
         for row_num, dim in src_ws.row_dimensions.items():
-            new_ws.row_dimensions[row_num].height = dim.height if dim.height else 15
+            if dim.height is not None:
+                new_ws.row_dimensions[row_num].height = dim.height
         for row in src_ws.iter_rows(min_row=1, max_row=src_ws.max_row, max_col=src_ws.max_column):
             for cell in row:
                 if isinstance(cell, MergedCell): continue
@@ -570,7 +600,10 @@ def generate_pdfs(job_dir):
                 new_ws.column_dimensions[L].width = width
                 new_ws.column_dimensions[L].hidden = dim.hidden
         for row_num, dim in src_ws.row_dimensions.items():
-            new_ws.row_dimensions[row_num].height = dim.height if dim.height else 15
+            # Preserve auto-height (height is None) so wrapped rows can grow in
+            # the PDF; only carry an explicit height when the source set one.
+            if dim.height is not None:
+                new_ws.row_dimensions[row_num].height = dim.height
             new_ws.row_dimensions[row_num].hidden = dim.hidden
         for row in src_ws.iter_rows(min_row=1, max_row=src_ws.max_row, max_col=src_ws.max_column):
             for cell in row:
@@ -581,12 +614,11 @@ def generate_pdfs(job_dir):
                     new_cell.font = copy(cell.font); new_cell.border = copy(cell.border)
                     new_cell.fill = copy(cell.fill); new_cell.number_format = cell.number_format
                     new_cell.protection = copy(cell.protection); new_cell.alignment = copy(cell.alignment)
-        for img in src_ws._images:
-            if os.path.exists(LOGO_PATH):
-                new_img = XlImage(LOGO_PATH)
-                new_img.width = img.width; new_img.height = img.height
-                new_img.anchor = 'B1'
-                new_ws.add_image(new_img)
+        # Re-insert the logo at the fixed safe size (never copy the source
+        # image's dimensions — an Excel round-trip can inflate them and overlap
+        # the header row). Only add one if the source sheet had a logo.
+        if src_ws._images:
+            add_logo(new_ws)
         # Copy print settings from source (preserves user edits)
         if src_ws.print_area:
             new_ws.print_area = src_ws.print_area
@@ -597,11 +629,16 @@ def generate_pdfs(job_dir):
         # Page setup — copy from source, fall back to landscape Letter
         new_ws.page_setup.orientation = src_ws.page_setup.orientation or 'landscape'
         new_ws.page_setup.paperSize = src_ws.page_setup.paperSize or 1  # 1 = Letter
-        new_ws.page_setup.fitToWidth = src_ws.page_setup.fitToWidth if src_ws.page_setup.fitToWidth else 1
+        # fitToWidth: default None -> 1, but preserve a deliberate 0.
+        new_ws.page_setup.fitToWidth = 1 if src_ws.page_setup.fitToWidth is None else src_ws.page_setup.fitToWidth
         new_ws.page_setup.fitToHeight = src_ws.page_setup.fitToHeight if src_ws.page_setup.fitToHeight is not None else 0
         if src_ws.page_setup.scale:
+            # A manual scale and fit-to-page are mutually exclusive; honor the
+            # user's scale rather than silently overriding it with fit-to-page.
             new_ws.page_setup.scale = src_ws.page_setup.scale
-        new_ws.sheet_properties.pageSetUpPr.fitToPage = True
+            new_ws.sheet_properties.pageSetUpPr.fitToPage = False
+        else:
+            new_ws.sheet_properties.pageSetUpPr.fitToPage = True
         new_wb.save(os.path.join(temp_dir, f"{safe_name}.xlsx"))
         new_wb.close()
 
