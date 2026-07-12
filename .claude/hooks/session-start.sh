@@ -19,6 +19,11 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi
 
+# Run in the background so the session starts immediately. The install still
+# runs, but doesn't block startup; the idempotency checks below make it a no-op
+# once the container has the tools cached.
+echo '{"async": true, "asyncTimeout": 300000}'
+
 SUDO=""
 [ "$(id -u)" -ne 0 ] && SUDO="sudo"
 
