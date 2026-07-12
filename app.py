@@ -16,6 +16,7 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, Border, Side
 from openpyxl.drawing.image import Image as XlImage
 from openpyxl.cell.cell import MergedCell
+from openpyxl.utils import get_column_letter
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
@@ -26,10 +27,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "2.0"
+APP_VERSION = "2.1"
 
 # Release notes (newest first)
 RELEASE_NOTES = [
+    {
+        'version': '2.1',
+        'title': 'PDF Column Width & Row Clipping Fix',
+        'description': 'Fixed a bug where the P.O. Number column collapsed to a narrow default width on some distributor PDFs, which made P.O. values wrap onto a second line and get clipped by the row height, and threw off the spacing next to the Surgeon column. Column widths are now copied faithfully from the reviewed workbook (including columns Excel groups together), so PDFs match the Excel layout.'
+    },
     {
         'version': '2.0',
         'title': 'Download & Reliability Fixes',
@@ -441,7 +447,13 @@ def process_excel(input_path, job_dir):
         for merge in src_ws.merged_cells.ranges:
             new_ws.merge_cells(str(merge))
         for col_letter, dim in src_ws.column_dimensions.items():
-            new_ws.column_dimensions[col_letter].width = dim.width if dim.width else 8.43
+            width = dim.width if dim.width else 8.43
+            # Expand across the full min..max range so coalesced column ranges
+            # (e.g. <col min=3 max=4>) don't drop columns. See generate_pdfs().
+            start = dim.min or 1
+            end = dim.max or start
+            for ci in range(start, end + 1):
+                new_ws.column_dimensions[get_column_letter(ci)].width = width
         for row_num, dim in src_ws.row_dimensions.items():
             new_ws.row_dimensions[row_num].height = dim.height if dim.height else 15
         for row in src_ws.iter_rows(min_row=1, max_row=src_ws.max_row, max_col=src_ws.max_column):
@@ -543,8 +555,20 @@ def generate_pdfs(job_dir):
         for merge in src_ws.merged_cells.ranges:
             new_ws.merge_cells(str(merge))
         for col_letter, dim in src_ws.column_dimensions.items():
-            new_ws.column_dimensions[col_letter].width = dim.width if dim.width else 8.43
-            new_ws.column_dimensions[col_letter].hidden = dim.hidden
+            width = dim.width if dim.width else 8.43
+            # A ColumnDimension can span a RANGE (Excel coalesces adjacent
+            # columns of equal width into one <col min=3 max=4>). openpyxl keys
+            # that range only under its min column, so copying per-key drops the
+            # other columns and they collapse to the default width in the PDF —
+            # this is what narrowed the P.O. Number column and caused the
+            # wrap/clip and bad Surgeon spacing. Apply the width to EVERY column
+            # in the range.
+            start = dim.min or 1
+            end = dim.max or start
+            for ci in range(start, end + 1):
+                L = get_column_letter(ci)
+                new_ws.column_dimensions[L].width = width
+                new_ws.column_dimensions[L].hidden = dim.hidden
         for row_num, dim in src_ws.row_dimensions.items():
             new_ws.row_dimensions[row_num].height = dim.height if dim.height else 15
             new_ws.row_dimensions[row_num].hidden = dim.hidden
