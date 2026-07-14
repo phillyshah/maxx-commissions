@@ -156,6 +156,19 @@ check(ws2.page_setup.scale == 85, f"manual scale preserved (got {ws2.page_setup.
 check(ws2.sheet_properties.pageSetUpPr.fitToPage in (False, None),
       "fit-to-page not force-enabled when a manual scale is set")
 
+print("\n=== TEST 5: header band rows 3-5 spacing (22.8 / 22.8 / 48.0) ===")
+# Fresh Step-1 tab must carry the template heights.
+wb = openpyxl.load_workbook(review); ws = wb[first_dist_tab(wb)]
+h = (ws.row_dimensions[3].height, ws.row_dimensions[4].height, ws.row_dimensions[5].height)
+check(h == (22.8, 22.8, 48.0), f"create_tab rows 3/4/5 = 22.8/22.8/48.0 (got {h})")
+# Step-2 must FORCE the band even when the source has the old heights.
+wb = openpyxl.load_workbook(review); ws = wb[first_dist_tab(wb)]
+ws.row_dimensions[3].height = 34.2; ws.row_dimensions[4].height = 57.0; ws.row_dimensions[5].height = 30.0
+old = '/tmp/_pdftest_oldband.xlsx'; wb.save(old)
+kept, _ = run_generate(old); ws2 = openpyxl.load_workbook(next(iter(kept.values()))).active
+h2 = (ws2.row_dimensions[3].height, ws2.row_dimensions[4].height, ws2.row_dimensions[5].height)
+check(h2 == (22.8, 22.8, 48.0), f"generate_pdfs forces rows 3/4/5 over stale source (got {h2})")
+
 print("\n" + "=" * 52)
 print("RESULT:", "ALL PASSED" if not fails else f"{len(fails)} FAILURE(S)")
 for f in fails: print("  -", f)

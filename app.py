@@ -27,10 +27,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Version
-APP_VERSION = "2.2"
+APP_VERSION = "2.3"
 
 # Release notes (newest first)
 RELEASE_NOTES = [
+    {
+        'version': '2.3',
+        'title': 'Statement Header Spacing',
+        'description': 'Tightened the spacing of the Distributor and contact lines and gave the column-header row more room on every distributor statement, so rows 3-5 match the approved template. The corrected spacing is applied both when the Excel review file is created and when it is turned into PDFs.'
+    },
     {
         'version': '2.2',
         'title': 'PDF Logo & Rendering Fixes',
@@ -145,7 +150,10 @@ COL_MIN = {2: 11,  3: 12, 4: 14, 5: 10, 6: 18, 7: 12, 8: 7, 9: 13, 10: 12}
 # 9/10 (Invoice Amount / Commission) get extra headroom so large totals — which
 # carry a "$" prefix the data rows don't — never render as "####".
 COL_MAX = {2: 14,  3: 18, 4: 35, 5: 20, 6: 50, 7: 35, 8: 10, 9: 18, 10: 18}
-ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 34.2, 4: 57.0, 5: 30.0}
+# Title/header band heights for distributor tabs. Rows 3-5 (Distributor line,
+# contact line, column-header row) follow the reviewed spacing template:
+# tight 3/4, roomier header row 5.
+ROW_HEIGHTS = {1: 42.6, 2: 41.4, 3: 22.8, 4: 22.8, 5: 48.0}
 DATA_ROW_H = 16.05
 TOTAL_ROW_H = 18.6
 SUM_COL_WIDTHS = {'A': 26.0, 'B': 17.89, 'C': 19.44, 'D': 13.11,
@@ -605,6 +613,10 @@ def generate_pdfs(job_dir):
             if dim.height is not None:
                 new_ws.row_dimensions[row_num].height = dim.height
             new_ws.row_dimensions[row_num].hidden = dim.hidden
+        # Header band (rows 3-5) always follows the current template, even if an
+        # older/edited review workbook was uploaded with different heights.
+        for rn in (3, 4, 5):
+            new_ws.row_dimensions[rn].height = ROW_HEIGHTS[rn]
         for row in src_ws.iter_rows(min_row=1, max_row=src_ws.max_row, max_col=src_ws.max_column):
             for cell in row:
                 if isinstance(cell, MergedCell): continue
